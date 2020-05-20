@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Body, Param, Delete, Patch, Query, UsePipes, ValidationPipe, NotFoundException } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Task, TaskStatus } from './tasks.model';
 import { CreateTaskDto } from './dtos/create-task.dto';
 import { GetTaskFilterDTO } from './dtos/filter-task.dto';
 import { TaskStatusPipe } from './pipes/taskStatusPipe.pipe';
@@ -8,6 +7,8 @@ import { TaskStatusPipe } from './pipes/taskStatusPipe.pipe';
 @Controller('tasks')
 export class TasksController {
     constructor(private taskService: TasksService){}
+
+    /*
 
     @Get()
     getTasks(@Query(ValidationPipe) getTaskFilterDTO: GetTaskFilterDTO): Task[]{
@@ -33,5 +34,5 @@ export class TasksController {
     @Patch(':id/status')
     updateTaskByid(@Param('id') id:string, @Body('status', TaskStatusPipe) status:TaskStatus): Task{
         return this.taskService.updateTaskByid(id, status);
-    }
+    }   */
 }
