@@ -3,56 +3,42 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {  generator} from 'rand-token';
 import { CreateTaskDto } from './dtos/create-task.dto';
 import { GetTaskFilterDTO } from './dtos/filter-task.dto';
+import { TaskRepository } from './task.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import {Task} from './task.entity'
+import { DeleteResult } from 'typeorm';
+import { TaskStatus } from './task-status.enum';
+import { User } from '../auth/user.entity';
 
 @Injectable()
 export class TasksService {
+    constructor(
+        @InjectRepository(TaskRepository)
+        private taskRepository:TaskRepository
+    ){}
 
-    /*
-    getAllTasks=() =>{
-        return [...this.tasks];
+    getTaskById = async(id: number, user: User) :Promise<Task> =>{
+        const found = await this.taskRepository.findOne({where:{id, userId:user.id}});
+        if(!found) throw new NotFoundException(`No fue encontrado ${id}`);
+        return found;
+    }
+    createTask = async(user: User, createtaskDto: CreateTaskDto): Promise<Task> =>{
+        return await this.taskRepository.createTask(user, createtaskDto);
+    }
+    deleteTaskByid = async(id:number, user: User): Promise<DeleteResult> =>{
+        const deleted = await this.taskRepository.delete({id, userId:user.id});
+        if(deleted.affected===0) throw new NotFoundException(`No se encontro la tarea con id ${id}`);
+        return deleted;
+    }
+    getTasks = async(user: User, getTaskFilterDTO: GetTaskFilterDTO) : Promise<Task[]> =>{
+        return await this.taskRepository.getTasks(user, getTaskFilterDTO);
     }
 
-    getTaskByFilter = (getTaskFilterDTO: GetTaskFilterDTO): Task[]=>{
-        const {status, search} = getTaskFilterDTO;
-        let tasks = this.getAllTasks();
-        if(status){
-            tasks = tasks.filter(task=>{
-                return task.status===status
-            })
-        }
-        return tasks;
-    }
 
-    createTask = (createtaskDto: CreateTaskDto):{status : string, task:Task} =>{
-        const {title, description} = createtaskDto;
-        const task : Task = {
-            id: generator({chars:'numeric'}).generate(6),
-            title,
-            description,
-            status: TaskStatus.NEW
-        }
-        this.tasks.push(task);
-        return {status:'exito', task};
-    }
-    
-    getTaskById = (id:string) : Task =>{
-
-        const found= this.tasks.find(ts =>{
-           return ts.id===id
-         });
-         if(!found) throw new NotFoundException(`No fue econtrador ${id}`);
-         return found;
-    }
-    deleteTaskByid = (id:string) =>{
-        
-        this.tasks=this.tasks.filter(el =>
-             el.id!==id
-        )   
-    }
-    updateTaskByid = (id:string, status:TaskStatus): Task =>{
-        const task : Task = this.getTaskById(id);
+    updateTaskByid =  async(id:number, status:TaskStatus, user:User): Promise<Task> =>{
+        const task : Task = await this.getTaskById(id, user);
         task.status= status;
-        return task;
-    }*/
+        return await this.taskRepository.save(task)
+    }
 
 }
